@@ -6,10 +6,22 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Response interceptor — handle error global
+// ← TAMBAH INI — set token dari localStorage saat app load
+const token = localStorage.getItem('miego_token')
+if (token) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
+
+// Response interceptor
 api.interceptors.response.use(
   res => res.data,
   err => {
+    // ← TAMBAH INI — kalau 401, hapus token dan redirect ke login
+    if (err.response?.status === 401) {
+      localStorage.removeItem('miego_token')
+      delete api.defaults.headers.common['Authorization']
+      window.location.href = '/login'
+    }
     const msg = err.response?.data?.message || 'Terjadi kesalahan'
     return Promise.reject(new Error(msg))
   }
